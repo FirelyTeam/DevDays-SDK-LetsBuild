@@ -1,4 +1,5 @@
 ﻿using Hl7.Fhir.Model;
+using Hl7.Fhir.Rest;
 using Hl7.Fhir.Serialization;
 using Hl7.Fhir.Specification.Source;
 using Hl7.Fhir.Validation;
@@ -15,12 +16,11 @@ namespace LetsBuild2021June
             {
                 Profile = new[] { "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient" }
             },
-            Id = "1",
             Identifier = new List<Identifier> { new Identifier("system", "example") },
             Gender = AdministrativeGender.Unknown,
             Name = new List<HumanName> { new HumanName { Family = "Visser" } },
             Active = true,
-            BirthDate = "2001-03-01"
+            BirthDate = "2001-03-01",
         };
 
         public static void Main(string[] args)
@@ -43,6 +43,26 @@ namespace LetsBuild2021June
 
             // print the outcome
             Console.WriteLine($"Success: {outcome.Success} \n{outcome.ToJson(jsonSerializationSettings)}");
+
+
+            var client = new FhirClient("https://server.fire.ly/r4");
+
+            var capability = client.CapabilityStatement();
+            Console.WriteLine($"capability: Name: {capability.Name}, Fhir Version: {capability.FhirVersion} ");
+
+            try
+            {
+                var oo = client.ValidateResource(_patient);
+                Console.WriteLine(oo.ToJson(jsonSerializationSettings));
+
+                var pat = client.Create<Patient>(_patient);
+                Console.WriteLine($"Id of patient: {pat.Id}");
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Something has happened: {ex.Message}");
+            }
 
             Console.ReadKey();
         }
