@@ -7,29 +7,51 @@ The instructions for session 2 can also be found [here](https://github.com/Firel
 **Exercise**: For this exercise, we are going to validate our resources before sending them to a FHIR server. We will use the Validator of the Firely .NET SDK. 
 
 ### Exercise steps
--	Open your previously created app, or clone the day-2 branch with the example solution: https://github.com/FirelyTeam/LetsBuildNetFall2020/tree/day-2
--	To your main code, add the following using statement to include the validator:
+-	Create a new C# Console project
+- Add the NuGet Package `Hl7.Fhir.R4` (latest version is 3.3.0) to your C# project 
+- In the main code, create a static object of type `Patient` and fill in some properties of this patient, for example a `Name`, `Active` and `Birthday`:
+```c#
+private static Patient _patient = new()
+        {   
+            Name = new List<HumanName> { new HumanName { Family = "Visser" } },
+            Active = true,
+            BirthDate = "2001-03-01",
+        };
+``` 
+- Let's serialize this patient so we can display it in our console. For that we can use the extented method `ToJson()`. When don't want to have to whole json on 1 line, you can use the `FhirJsonSerializationSettings` and set `Pretty` to true.
+```c#
+   _patient.ToJson(jsonSerializationSettings);
+```
+
+- So we have our (in memory) patient ready. Now let's validate this patient to make sure it meets the FHIR rules.
+
+- Add the NuGet Package `Hl7.Fhir.Specification.R4` (latest version is 3.3.0) to your C# project  
+-	Add to your main code, the following using statement to include the validator:
 ```c#
     using Hl7.Fhir.Validation;
     using Hl7.Fhir.Specification.Source;
 ```
-
-For this, you have to include the NuGet package `Hl7.Fhir.Specification.R4`.
 -	Create a new Validator instance:
 ```c#
     var validator = new Validator();
 ```
--	Try to validate a single observation:
+-	Try to validate a single patient:
 ```c#
-    var outcome = validator.Validate(obs);
+    var outcome = validator.Validate(_patient);
 ```
-- Check the outcome of the validation operation. This outcome has some properties that you can use:
+
+- The outcome of the validator is of type `OperationOutcome` and is also a FHIR resource. We can serialize this to a string and write this to the console:
+```c#
+    // print the outcome
+    Console.WriteLine($"Success: {outcome.Success} \n{outcome.ToJson(jsonSerializationSettings)}");
+```
+- Now, run the console application and check the outcome of the validation operation. This outcome has some properties that you can use:
   - Success: a Boolean which indicates whether the validation was successful or not
   - Issue: a list of issues that were raised during validation
   -  See [this link](https://www.hl7.org/fhir/operationoutcome.html) for more information about the OperationOutcome.
 
--	You will notice that the validation fails. The message `[ERROR] Unable to resolve reference to profile 'http://hl7.org/fhir/StructureDefinition/Observation'` is shown. 
-The validator needs the standard Observation profile (StructureDefinition) to validate the instance. So, we must tell the validator where to find this this profile. We do this by passing a ResourceResolver to the validator. For all the standard HL7 FHIR resources, the SDK has a special ResourceResolver already made for you: `ZipSource.CreateValidationSource()`:
+-	You will notice that the validation fails. The message `[ERROR] Unable to resolve reference to profile 'http://hl7.org/fhir/StructureDefinition/Patient'` is shown. 
+The validator needs the standard Patient profile (StructureDefinition) to validate the instance. So, we must tell the validator where to find this this profile. We do this by passing a ResourceResolver to the validator. For all the standard HL7 FHIR resources, the SDK has a special ResourceResolver already made for you: `ZipSource.CreateValidationSource()`:
 ```c#
     var resolver = ZipSource.CreateValidationSource();
     var settings = ValidationSettings.CreateDefault();
@@ -39,11 +61,16 @@ The validator needs the standard Observation profile (StructureDefinition) to va
 ```
 - Note that we wrap the standard ResourceResolver in a `CachedResolver`. This will speed up the validation when you validate more than 1 resource. 
 
--	Run the program again and you will see that the validation of Observation is successful.
--	The field code in Observation is mandatory (see also https://www.hl7.org/fhir/observation.html). When we remove this code, the validator should report this. Try this out.
--	The validator can also use other profiles to validate against. In the subdirectory profile, there is such a profile: MyObservation.StructureDefinition.xml. You can download this profile [here](https://github.com/FirelyTeam/LetsBuildNetFall2020/blob/day-3/Day3-validating/DevDaysMapper/profiles/MyObservation.StructureDefinition.xml).
-This profile is derived from the standard Observation profile and restrict the category of an Observation: at least 2 categories are mandatory.
-In order to use this profile we have to tell the validator where to find this profile. We do this with a `DirectorySource`:
+-	Run the program again and you will see that the validation of Patient is successful.
+- The field `language` in `Communication` is mandatory (see also https://www.hl7.org/fhir/patient.html). When we add a communcation item to patient and leave out the language, the validator should report this. Try this out.
+
+The validator can also use other profiles to validate against. For example the profile `Us-core-patient`, see [here](http://hl7.org/fhir/us/core/STU3.1.1/StructureDefinition-us-core-patient.html) for the definition. 
+In the next steps we are going to validate our in memory patient to this us-core-patient profile. 
+
+- Downloading the profile (`StructureDefinition-us-core-patient.xml`) would not be enough, because this particular profile is also dependent on other profiles. It would be better to download the [FHIR package](http://hl7.org/fhir/us/core/STU3.1.1/downloads.html) of us-core, which contains all the us-core profiles.  
+
+- Extract the package in a subdirectory (`profiles`) of your solution.
+- In order to use these profiles we have to tell the validator where to find this profile. We do this with a `DirectorySource`:
 ```c#
     var directoryResolver = new DirectorySource("profiles");
 ```
@@ -58,12 +85,14 @@ In order to use this profile we have to tell the validator where to find this pr
                 
     var validator = new Validator(settings);
 ```
--	Let’s validate an observation with the new profile:
+-	Let’s validate our patient against this new us-core profile:
 ```c#
     var outcome = validator.Validate(obs, new[] {
-               "http://fire.ly/fhir/StructureDefinition/MyObservation" });
+               "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient" });
 ```
-- You will see that the validation fails, because we have no observation with minimal 2 categories. 
+- You will see that the validation fails, because an identifier and gender is mandatory.
+- Change your in-memory patient so that it validates again.
+- You can also add the profile in the meta part of the patient. The validator will pick that up and uses this profile to validate your instance. Try this out.
 
 ## Session 2b – Communicate with a FHIR server
 **Exercise**: For this exercise, we will be using the mapped data from the first day to send the FHIR resources to a
