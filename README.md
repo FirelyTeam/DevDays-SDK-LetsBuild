@@ -106,7 +106,7 @@ FHIR server. In addition, we will cover a few search methods to find resources o
 ```
 using Hl7.Fhir.Rest;
 ```
-- Create a new FhirClient object, pointing it to the public Firely test server “https://server.fire.ly/r4”. With the FhirClient, you can use methods for the RESTful interactions:
+- Create a new FhirClient object, pointing it to the public Firely test server "https://server.fire.ly/r4". With the FhirClient, you can use methods for the RESTful interactions:
 ```c#
 var client = new FhirClient("https://server.fire.ly/r4");
 ```
