@@ -6,7 +6,7 @@ using Hl7.Fhir.Validation;
 using System;
 using System.Collections.Generic;
 
-namespace LetsBuild2021June
+namespace LetsBuild
 {
     public class Program
     {
@@ -81,12 +81,15 @@ namespace LetsBuild2021June
                 results = client.Continue(results);
                 if(results is {})
                     Console.WriteLine($"Next page\n{results.ToJson(jsonSerializationSettings)}");
+                else
+                    Console.WriteLine("No next page available");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Something has happened: {ex.Message}");
             }
 
+            Console.WriteLine("Enter any key to exit...");
             Console.ReadKey();
         }
     }
