@@ -79,7 +79,8 @@ namespace LetsBuild2021June
 
                 // continue with the next page:
                 results = client.Continue(results);
-                Console.WriteLine($"Next page\n{results.ToJson(jsonSerializationSettings)}");
+                if(results is {})
+                    Console.WriteLine($"Next page\n{results.ToJson(jsonSerializationSettings)}");
             }
             catch (Exception ex)
             {
