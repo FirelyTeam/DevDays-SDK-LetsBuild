@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Hl7.Fhir.R4" Version="3.3.0" />
-    <PackageReference Include="Hl7.Fhir.Specification.R4" Version="3.3.0" />
+    <PackageReference Include="Hl7.Fhir.R4" Version="4.0.0" />
+    <PackageReference Include="Hl7.Fhir.Specification.R4" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
