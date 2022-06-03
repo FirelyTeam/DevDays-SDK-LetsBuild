@@ -11,7 +11,7 @@ namespace LetsBuild
 {
     public class Program
     {
-        private static Patient _patient = new()
+        private static readonly Patient _patient = new()
         {
             Identifier = new List<Identifier> { new Identifier("system", "example") },
             Gender = AdministrativeGender.Unknown,
