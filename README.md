@@ -18,16 +18,16 @@ The instructions for session 2 can also be found [here](https://github.com/Firel
             BirthDate = "2001-03-01",
         };
 ``` 
-- Let's serialize this patient to a string so we can display it in our console. For that we can use the extented method `ToJson()`. When don't want to have to whole json on 1 line, you can use the `FhirJsonSerializationSettings` and set `Pretty` to true.
+- Let's serialize this patient to a string so we can display it in our console. For that we can use the `JsonSerializer`. When don't want to have to whole json on 1 line, you can use the `JsonSerializerOptions` and set `WriteIndented` to true.
 ```c#
     // pretty print the json
-    var jsonSerializationSettings = new FhirJsonSerializationSettings { Pretty = true };
-    _patient.ToJson(jsonSerializationSettings);
+    var options = new JsonSerializerOptions(){WriteIndented = true}.ForFhir(typeof(Patient).Assembly);
+    var json = JsonSerializer.Serialize<Patient>(patFromServer, options);
 ```
 
 - So we have our (in memory) patient ready. Now let's validate this patient to make sure it meets the FHIR rules.
 
-- Add the NuGet Package `Hl7.Fhir.Specification.R4` (latest version is 3.3.0) to your C# project  
+- Add the NuGet Package `Hl7.Fhir.Specification.R4` (latest version is 4.0.0) to your C# project  
 -	Add to your main code, the following using statement to include the validator:
 ```c#
     using Hl7.Fhir.Validation;
@@ -45,7 +45,7 @@ The instructions for session 2 can also be found [here](https://github.com/Firel
 - The outcome of the validator is of type `OperationOutcome` and is also a FHIR resource. We can serialize this to a string and write this to the console:
 ```c#
     // print the outcome
-    Console.WriteLine($"Success: {outcome.Success} \n{outcome.ToJson(jsonSerializationSettings)}");
+    Console.WriteLine($"Success: {outcome.Success} \n{JsonSerializer.Serialize<Bundle>(results, options)}");
 ```
 - Now, run the console application and check the outcome of the validation operation. This outcome has some properties that you can use:
   - Success: a Boolean which indicates whether the validation was successful or not
@@ -53,10 +53,12 @@ The instructions for session 2 can also be found [here](https://github.com/Firel
   -  See [this link](https://www.hl7.org/fhir/operationoutcome.html) for more information about the OperationOutcome.
 
 -	You will notice that the validation fails. The message `[ERROR] Unable to resolve reference to profile 'http://hl7.org/fhir/StructureDefinition/Patient'` is shown. 
-The validator needs the standard Patient profile (StructureDefinition) to validate the instance. So, we must tell the validator where to find this this profile. We do this by passing a ResourceResolver to the validator. For all the standard HL7 FHIR resources, the SDK has a special ResourceResolver already made for you: `ZipSource.CreateValidationSource()`:
+The validator needs the standard Patient profile (StructureDefinition) to validate the instance. So, we must tell the validator where to find this this profile. We do this by passing a FhirPackageSource to the validator. For all the standard HL7 FHIR resources, the SDK has a special ResourceResolver already made for you:
 ```c#
-    var resolver = ZipSource.CreateValidationSource();
-    var settings = ValidationSettings.CreateDefault();
+    var resolver = new CachedResolver(new FhirPackageSource(
+                "https://packages.simplifier.net", 
+                new[] { "hl7.fhir.r4.core" }
+            ));
 
     settings.ResourceResolver = new CachedResolver(resolver);
     var validator = new Validator(settings); 
@@ -69,24 +71,14 @@ The validator needs the standard Patient profile (StructureDefinition) to valida
 The validator can also use other profiles to validate against. For example the profile `Us-core-patient`, see [here](http://hl7.org/fhir/us/core/STU3.1.1/StructureDefinition-us-core-patient.html) for the definition. 
 In the next steps we are going to validate our in memory patient to this us-core-patient profile. 
 
-- Downloading the profile (`StructureDefinition-us-core-patient.xml`) would not be enough, because this particular profile is also dependent on other profiles. It would be better to download the [FHIR package](http://hl7.org/fhir/us/core/STU3.1.1/downloads.html) of us-core, which contains all the us-core profiles.  
-
-- Extract the package in a subdirectory (`profiles`) of your solution.
 - In order to use these profiles we have to tell the validator where to find this profile. We do this with a `DirectorySource`:
 ```c#
-    var directoryResolver = new DirectorySource("profiles");
+    var resolver = new CachedResolver(new FhirPackageSource(
+                "https://packages.simplifier.net", 
+                new[] { "hl7.fhir.us.core@3.1.1" }
+            ));
 ```
-- This will read all profiles in the subdirectory profiles. To combine this profile with the standard profiles we use the class MultiResolver. The code would be then:
-```c#
-    var resolver = ZipSource.CreateValidationSource();
-    var directoryResolver = new DirectorySource("profiles");
 
-    var settings = ValidationSettings.CreateDefault();
-    settings.ResourceResolver = new CachedResolver(
-                    new MultiResolver(resolver, directoryResolver));
-                
-    var validator = new Validator(settings);
-```
 -	Let’s validate our patient against this new us-core profile:
 ```c#
     var outcome = validator.Validate(obs, new[] {
