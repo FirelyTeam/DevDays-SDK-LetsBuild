@@ -1,4 +1,4 @@
-# Let's Build .Net June 2021
+# Let's Build .Net Session 2
 
 The instructions for session 2 can also be found [here](https://github.com/FirelyTeam/DevDays2021June_LetsBuild/blob/session2/DD21_June_Track_Session2.pdf) in pdf form.
 
