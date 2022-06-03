@@ -26,9 +26,9 @@ namespace LetsBuild
             var options = new JsonSerializerOptions(){WriteIndented = true}.ForFhir(typeof(Patient).Assembly);
 
             // Set up resolver
-            var resolver = new CachedResolver(new MultiResolver(
-                new DirectorySource("profiles", new DirectorySourceSettings { IncludeSubDirectories = true }),
-                ZipSource.CreateValidationSource()
+            var resolver = new CachedResolver(new FhirPackageSource(
+                "https://packages.simplifier.net", 
+                new[] { "hl7.fhir.us.core@3.1.1" }
             ));
 
             // setting up the validator
@@ -37,6 +37,7 @@ namespace LetsBuild
 
             // validate the patient
             var outcome = validator.Validate(_patient);
+            //var outcome = validator.Validate(_patient, new []{"http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"});
 
             // print the outcome
             Console.WriteLine($"Success: {outcome.Success} \n{JsonSerializer.Serialize<OperationOutcome>(outcome, options)}");
