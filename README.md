@@ -1,10 +1,10 @@
-# Let's Build .Net June 2021
+# Let's Build with the official Firely .NET SDK for FHIR
 
 The instructions for session 1 can also be found [here](https://github.com/FirelyTeam/DevDays2021June_LetsBuild/blob/session1/DD21_June_Track_Session1.pdf) in pdf form.
 
 
 
-# Let’s build a FHIR app - .Net
+# Let’s build a FHIR app - .NET
 
 ## Session 1 - Build a FHIR Data Mapper
 
@@ -17,9 +17,9 @@ and Observation resources. We will use the [Firely .NET SDK](https://github.com/
 We'll be using a sample data file from the CDC NHANES (National Health and Nutrition Examination Study)
 publicly available sample data set. The format of the data set is described at [this link](https://wwwn.cdc.gov/Nchs/Nhanes/2017-2018/CBC_J.htm). For the exercise, James Agnew has reworked the format a bit to add fake patient identities and timestamps to the data.
 
-The input CSV file can be found [here](https://github.com/FirelyTeam/DevDays2021June_LetsBuild/blob/main/sample-data.csv): sample-data.csv
+The input CSV file can be found [here](https://github.com/FirelyTeam/DevDays-SDK-LetsBuild/blob/main/sample-data.csv): sample-data.csv
 
-The example solution can be found in the [‘session1’ branch](https://github.com/FirelyTeam/DevDays2021June_LetsBuild/tree/session1)
+The example solution can be found in the [‘session1’ branch](https://github.com/FirelyTeam/DevDays-SDK-LetsBuild/tree/session1)
 
 
 **Approach**
@@ -41,12 +41,12 @@ Note the columns:
   * PATIENT_GENDER: This is the gender of the patient
 - Test result columns (each of these will be a separate Observation resource):
   - WBC: "White Blood Cells": This a count of the number
-  
+
   - RBC: "Red Blood Cells"
-  
+
   - HB: "Hemoglobin"
-  
-    
+
+
 
 ### Exercise steps
 
@@ -80,7 +80,7 @@ Note the columns:
 
     - Optionally, you can set the category to ‘laboratory’ by creating a new CodeableConcept with that string as code, and ‘http://terminology.hl7.org/CodeSystem/observation-category’ as system
 
-      
+
 
 **Information for mapping the Observations**:
 
@@ -120,6 +120,6 @@ Unit Code: g/dL
     - Bonus points if you create a nicer display than just the plain text output in a Console app!
   - Make sure you use the FHIR resources, not the CSV data itself.
 
- 
+
 
 Have fun, and remember to ask for help if you get stuck!

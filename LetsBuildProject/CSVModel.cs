@@ -1,4 +1,4 @@
-﻿namespace LetsBuild2021June
+﻿namespace LetsBuildProject
 {
     public class CSVModel
     {

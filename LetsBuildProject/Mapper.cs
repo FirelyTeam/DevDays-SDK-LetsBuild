@@ -1,6 +1,6 @@
 ﻿using Hl7.Fhir.Model;
 
-namespace LetsBuild2021June
+namespace LetsBuildProject
 {
     public class Mapper
     {
