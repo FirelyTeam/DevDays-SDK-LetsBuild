@@ -1,6 +1,6 @@
 # Let's Build with the official Firely .NET SDK for FHIR
 
-The instructions for session 1 can also be found [here](https://github.com/FirelyTeam/DevDays-SDK-LetsBuild/blob/session1/DD22_FHIRApp_Session1.pdf) in pdf form.
+The instructions for session 1 can also be found [here](https://github.com/FirelyTeam/DevDays-SDK-LetsBuild/blob/session1/DD22_FHIRApp_session1.pdf) in pdf form.
 
 
 
