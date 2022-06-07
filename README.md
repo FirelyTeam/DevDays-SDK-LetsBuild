@@ -1,14 +1,14 @@
 # Let's Build .Net Session 2
 
-The instructions for session 2 can also be found [here](https://github.com/FirelyTeam/DevDays2021June_LetsBuild/blob/session2/DD21_June_Track_Session2.pdf) in pdf form.
+The instructions for session 2 can also be found [here](https://github.com/FirelyTeam/DevDays-SDK-LetsBuild/blob/session2/DD22_FHIRApp_session2.pdf) in pdf form.
 
 ## Session 2a – Validating FHIR resources
 
-**Exercise**: For this exercise, we are going to validate our resources before sending them to a FHIR server. We will use the Validator of the Firely .NET SDK. 
+**Exercise**: For this exercise, we are going to validate our resources before sending them to a FHIR server. We will use the Validator of the Firely .NET SDK.
 
 ### Exercise steps
 -	Create a new C# Console project
-- Add the NuGet Package `Hl7.Fhir.R4` (latest version is 3.3.0) to your C# project 
+- Add the NuGet Package `Hl7.Fhir.R4` (latest version is 3.3.0) to your C# project
 - In the main code, create a static object of type `Patient` and fill in some properties of this patient, for example a `Name`, `Active` and `Birthday`:
 ```c#
         private static Patient _patient = new()
@@ -17,7 +17,7 @@ The instructions for session 2 can also be found [here](https://github.com/Firel
             Active = true,
             BirthDate = "2001-03-01",
         };
-``` 
+```
 - Let's serialize this patient to a string so we can display it in our console. For that we can use the `JsonSerializer`. When don't want to have to whole json on 1 line, you can use the `JsonSerializerOptions` and set `WriteIndented` to true.
 ```c#
     // pretty print the json
@@ -52,29 +52,29 @@ The instructions for session 2 can also be found [here](https://github.com/Firel
   - Issue: a list of issues that were raised during validation
   -  See [this link](https://www.hl7.org/fhir/operationoutcome.html) for more information about the OperationOutcome.
 
--	You will notice that the validation fails. The message `[ERROR] Unable to resolve reference to profile 'http://hl7.org/fhir/StructureDefinition/Patient'` is shown. 
+-	You will notice that the validation fails. The message `[ERROR] Unable to resolve reference to profile 'http://hl7.org/fhir/StructureDefinition/Patient'` is shown.
 The validator needs the standard Patient profile (StructureDefinition) to validate the instance. So, we must tell the validator where to find this this profile. We do this by passing a FhirPackageSource to the validator. For all the standard HL7 FHIR resources, the SDK has a special ResourceResolver already made for you:
 ```c#
     var resolver = new CachedResolver(new FhirPackageSource(
-                "https://packages.simplifier.net", 
+                "https://packages.simplifier.net",
                 new[] { "hl7.fhir.r4.core" }
             ));
 
     settings.ResourceResolver = new CachedResolver(resolver);
-    var validator = new Validator(settings); 
+    var validator = new Validator(settings);
 ```
-- Note that we wrap the standard ResourceResolver in a `CachedResolver`. This will speed up the validation when you validate more than 1 resource. 
+- Note that we wrap the standard ResourceResolver in a `CachedResolver`. This will speed up the validation when you validate more than 1 resource.
 
 -	Run the program again and you will see that the validation of Patient is successful.
 - The field `language` in `Communication` is mandatory (see also https://www.hl7.org/fhir/patient.html). When we add a communcation item to patient and leave out the language, the validator should report this. Try this out.
 
-The validator can also use other profiles to validate against. For example the profile `Us-core-patient`, see [here](http://hl7.org/fhir/us/core/STU3.1.1/StructureDefinition-us-core-patient.html) for the definition. 
-In the next steps we are going to validate our in memory patient to this us-core-patient profile. 
+The validator can also use other profiles to validate against. For example the profile `Us-core-patient`, see [here](http://hl7.org/fhir/us/core/STU3.1.1/StructureDefinition-us-core-patient.html) for the definition.
+In the next steps we are going to validate our in memory patient to this us-core-patient profile.
 
 - In order to use these profiles we have to tell the validator where to find this profile. We do this with a `DirectorySource`:
 ```c#
     var resolver = new CachedResolver(new FhirPackageSource(
-                "https://packages.simplifier.net", 
+                "https://packages.simplifier.net",
                 new[] { "hl7.fhir.us.core@3.1.1" }
             ));
 ```
@@ -148,7 +148,7 @@ var q = new SearchParams()
     .Include("Patient:organization")
     .LimitTo(5);
 results = client.Search<Patient>(q);
-``` 
+```
 - This will search for patients with an exact family name = 'Visser', ordered by birthdate and include organization (if present). Only the summary is returned (so not all fields). And also limit the results to 5 patients.
 
 - The example above limits the results to only 5 patient. To retrieve the 5 next patients, just use the FhirClient function `Continue`:
@@ -157,57 +157,12 @@ results = client.Search<Patient>(q);
 results = client.Continue(results);
 ```
 
-### Extra exercise
-
-The public test server is open to everyone, and does not use authorization/authentication. In production
-systems you will run into needing this, and often it is implemented with OAuth2. Servers that support the
-SMART on FHIR app launch will be able to recognize this and use a SMART on FHIR token. The next steps in this
-exercise will guide you to add such a token to the FhirClient, in order to be used on a request.
-
-We assume you have a valid token. If not, there is a good topic on that to be found on chat.fhir.org, pointing to a couple of
-code projects to help you with that: https://chat.fhir.org/#narrow/stream/179171-dotnet/topic/SMART.20on.20FHIR.20app.20sample.20code.20in.20dotnet
-- Adding a token to be sent with every request, is done by implementing your own message handler to
-be used by the FhirClient. An example for authorization would be:
-```c#
-public class AuthorizationMessageHandler : HttpClientHandler
-{
-    public System.Net.Http.Headers.AuthenticationHeaderValue Authorization   { get; set; }
-
-    protected async override Task<HttpResponseMessage> SendAsync(HttpRequestMessage
-             request, CancellationToken cancellationToken)
-    {
-       if (Authorization != null)
-          request.Headers.Authorization = Authorization;
-       return await base.SendAsync(request, cancellationToken);
-    }
-} 
-```
-- Then add that to the FhirClient – note the different server base!:
-```c#
-    var handler = new AuthorizationMessageHandler();
-    var bearerToken = "AbCdEf123456"; //example-token, replace with provided token
-    handler.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
-    var client = new FhirClient("https://labs.vonk.fire.ly/r4", null, handler);
-```
-- Now you can request a Patient:
-```c#
-var pat = client.Read<Patient>("Patient/test");
-```
-- You can also perform a search for the Patient’s white blood cell count Observations, resulting in a
-Bundle resource:
-```c#
-var q = new SearchParams("code", "http://loinc.org|6690-2");
-var result = client.Search<Observation>(q);
-```
-- Add those results to an Observation list, and display the Patient and Observation data
-- Do the same for red blood cell count, and hemoglobin Observations
 Have fun, and remember to ask for help if you get stuck!
 
 ## Further information
 Some useful links:
-- Extra documentation for FhirClient: https://docs.fire.ly/projects/Firely-NET-SDK/client.html 
-- HL7 Fhir Restful API specification: https://www.hl7.org/fhir/http.html 
-- Zulip stream for asking questions about Firely .NET SDK: https://chat.fhir.org/#narrow/stream/179171-dotnet 
+- Extra documentation for FhirClient: https://docs.fire.ly/projects/Firely-NET-SDK/client.html
+- HL7 Fhir Restful API specification: https://www.hl7.org/fhir/http.html
+- Zulip stream for asking questions about Firely .NET SDK: https://chat.fhir.org/#narrow/stream/179171-dotnet
 - List of Fhir Test servers: https://confluence.hl7.org/display/FHIR/Public+Test+Servers
 - SMART overview: https://github.com/GinoCanessa/FhirDevVideoNotes/tree/main/03-Getting-SMART
-
