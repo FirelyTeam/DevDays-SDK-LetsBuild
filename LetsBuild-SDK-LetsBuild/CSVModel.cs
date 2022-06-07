@@ -1,4 +1,4 @@
-﻿namespace LetsBuildProject
+﻿namespace LetsBuild
 {
     public class CSVModel
     {

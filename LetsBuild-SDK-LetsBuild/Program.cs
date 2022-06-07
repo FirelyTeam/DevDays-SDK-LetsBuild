@@ -6,7 +6,7 @@ using System.Linq;
 using CsvHelper;
 using Hl7.Fhir.Model;
 
-namespace LetsBuildProject
+namespace LetsBuild
 {
     class Program
     {
